@@ -182,13 +182,13 @@ def FIRE_check(net_worth_val, fire_number, age, year, savings, invested, expense
         age += 1
         year += 1
         invested = update_investments(invested, yearly_contributions, growth_rate)
-        hecs_remain = max(0, hecs_balance - HECS(salary))
+        hecs_balance = max(0, hecs_balance - HECS(salary))
         salary = salary * (1 + 0.02)        #Adjusting salary based on cost of living adjustment only
         mortgage = max(0, mortgage - mortgage_repayment)
         savings = savings + salary - expenses - yearly_contributions
         net_worth_val = net_worth(savings, invested, property_value, hecs_balance, mortgage)
 
-    return age, year, invested, hecs_remain, salary, mortgage, net_worth_val
+    return age, year, invested, hecs_balance, salary, mortgage, net_worth_val
 
 if __name__ == "__main__":
     print(main())
