@@ -178,17 +178,39 @@ def update_investments(initial, contributions, growth_rate):
 
 def FIRE_check(net_worth_val, fire_number, age, year, savings, invested, expenses, property_value, yearly_contributions, growth_rate, hecs_balance, salary, mortgage, mortgage_repayment):
 
+    results = {"age": [],
+                   "year": [],
+                   "invested_amount": [],
+                   "hecs_remaining": [],
+                   "salary": [],
+                   "mortgage_remaining": [],
+                   "net_worth": []
+        }
+    
     while net_worth_val < fire_number and age < 100:
         age += 1
         year += 1
         invested = update_investments(invested, yearly_contributions, growth_rate)
-        hecs_balance = max(0, hecs_balance - HECS(salary))
-        salary = salary * (1 + 0.02)        #Adjusting salary based on cost of living adjustment only
+        hecs_repayments = HECS(salary)
+        hecs_balance = max(0, hecs_balance - hecs_repayments)
         mortgage = max(0, mortgage - mortgage_repayment)
-        savings = savings + salary - expenses - yearly_contributions
+        savings = savings + salary - expenses - yearly_contributions - hecs_repayments - mortgage_repayment
+
+        #Updating salary and net worth
+        salary = salary * (1 + 0.02)        #Adjusting salary based on cost of living adjustment only
         net_worth_val = net_worth(savings, invested, property_value, hecs_balance, mortgage)
 
-    return age, year, invested, hecs_balance, salary, mortgage, net_worth_val
+        results["age"].append(age)
+        results["year"].append(year)
+        results["invested_amount"].append(invested)
+        results["hecs_remaining"].append(hecs_balance)
+        results["salary"].append(salary)
+        results["mortgage_remaining"].append(mortgage)
+        results["net_worth"].append(net_worth_val)
+
+    df = pd.DataFrame(results)
+    # return age, year, invested, hecs_balance, salary, mortgage, net_worth_val
+    return df
 
 if __name__ == "__main__":
     print(main())
