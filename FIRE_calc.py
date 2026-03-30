@@ -11,6 +11,9 @@ def main():
     #Running fire_number to see what the goal is
     fire = fire_number(inputs["expenses"])
 
+    #Adding fire_number to person dict
+    person["fire goal"] = fire
+
     #Checking inclusive flag to see if inc_super function needs to be ran
     if inclusive:
         salary = inc_super(inputs["salary"])
@@ -28,30 +31,10 @@ def main():
     #Storing investment values into dict for input into FIRE_check()
     investment_vals = {"invested": invested,
                        "yearly contributions": yearly_contributions,
-                       "growth rate": growth_rate
+                       "growth rate": growth_rate,
+                       "property_value": inputs["property"]
     }
 
-
-    #Probably don't need these bits - dataframe will be created by fire_check 
-    # #Setting up the dataframe
-    # df = pd.DataFrame([{
-    #     key: inputs[key]
-    #     for key in ["age", "savings", "expenses", "hecs", "property", "mortgage", "other_debt"]
-    # }])
-    # #Preparing unpacked columns not from inputs
-    # df["net_salary"] = net_pay
-    # df["fire"] = fire
-    # df["investments"] = invested
-    # df["year"] = 1
-    # df["net_worth"] = net_worth(inputs["savings"],invested ,inputs["property"],inputs["hecs"],inputs["mortgage"])
-
-    # #Rearranging df with year as the first column 
-    # #We first name variable cols and rearrange by prepending age to the start, then loop through other cols if not age 
-    # cols = ["age"] + [c for c in df.columns if c != "age"]
-    # df = df[cols]
-
-    # #Setting up year 2
-    
 
     return investment_vals
 
@@ -196,7 +179,7 @@ def update_investments(initial, contributions, growth_rate):
     return (initial + contributions) * (1 + growth_rate)
 
 # def FIRE_check(net_worth_val, fire_number, age, year, savings, invested, expenses, property_value, yearly_contributions, growth_rate, hecs_balance, salary, mortgage, mortgage_repayment):
-def FIRE_check(person, investment_vals, debts, net_worth_val,):
+def FIRE_check(person, investment_vals, debts, net_worth_val, fire_number):
 
     #Initialise year and results dict
     year = 0
@@ -216,23 +199,22 @@ def FIRE_check(person, investment_vals, debts, net_worth_val,):
         invested = update_investments(investment_vals["invested"], investment_vals["yearly_contributions"], investment_vals["growth rate"])
         hecs_repayments = HECS(person["salary"])
         hecs_bal = max(0, debts["hecs balance"] - hecs_repayments)
-        mortgage = max(0, mortgage - mortgage_repayment)
-        savings = savings + salary - expenses - yearly_contributions - hecs_repayments - mortgage_repayment
+        mortgage = max(0, debts["mortgage"] - debts["mortgage_repayment"])
+        savings = person["savings"] + person["salary"] - person["expenses"] - investment_vals["yearly contributions"] - hecs_repayments - debts["mortgage repayment"]
 
         #Updating salary and net worth
-        salary = salary * (1 + 0.02)        #Adjusting salary based on cost of living adjustment only
-        net_worth_val = net_worth(savings, invested, property_value, hecs_balance, mortgage)
+        person["salary"] = person["salary"] * (1 + 0.02)        #Adjusting salary based on cost of living adjustment only
+        net_worth_val = net_worth(savings, invested, investment_vals["property_value"], hecs_bal, mortgage)
 
         results["age"].append(age)
         results["year"].append(year)
         results["invested_amount"].append(invested)
         results["hecs_remaining"].append(hecs_bal)
-        results["salary"].append(salary)
+        results["salary"].append(person["salary"])
         results["mortgage_remaining"].append(mortgage)
         results["net_worth"].append(net_worth_val)
 
     df = pd.DataFrame(results)
-    # return age, year, invested, hecs_balance, salary, mortgage, net_worth_val
     return df
 
 if __name__ == "__main__":
