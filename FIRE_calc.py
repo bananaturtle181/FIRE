@@ -181,36 +181,59 @@ def update_investments(initial, contributions, growth_rate):
 # def FIRE_check(net_worth_val, fire_number, age, year, savings, invested, expenses, property_value, yearly_contributions, growth_rate, hecs_balance, salary, mortgage, mortgage_repayment):
 def FIRE_check(person, investment_vals, debts, net_worth_val, fire_number):
 
-    #Initialise year and results dict
+    #Make copy of input dictionary to avoid changes to inputs
+    person_copy = person.copy()
+    investment_vals_copy = investment_vals.copy()
+    debts_copy = debts.copy()
+
+    #Initialise year, age and savings and results dictionary
     year = 0
     age = person["age"]
-    results = {"age": [],
-                   "year": [],
-                   "invested_amount": [],
-                   "hecs_remaining": [],
-                   "salary": [],
-                   "mortgage_remaining": [],
-                   "net_worth": []
+    savings = person["savings"]
+    salary_growth = (1 + 0.02)
+    results = {"age": [person["age"]],
+                   "year": [0],
+                   "invested_amount": [investment_vals["invested"]],
+                   "hecs_remaining": [debts["hecs balance"]],
+                   "salary": [person["salary"]],
+                   "mortgage_remaining": [debts["mortgage"]],
+                   "net_worth": [net_worth_val]
         }
     
-    while net_worth_val < fire_number and person["age"] < 100:
+    while net_worth_val < fire_number and age < 100:  #Setting up while loop and limiting age to 100 so loop will always end
+        #Initialise age and year counters
         age += 1
         year += 1
-        invested = update_investments(investment_vals["invested"], investment_vals["yearly_contributions"], investment_vals["growth rate"])
-        hecs_repayments = HECS(person["salary"])
-        hecs_bal = max(0, debts["hecs balance"] - hecs_repayments)
-        mortgage = max(0, debts["mortgage"] - debts["mortgage_repayment"])
-        savings = person["savings"] + person["salary"] - person["expenses"] - investment_vals["yearly contributions"] - hecs_repayments - debts["mortgage repayment"]
+
+        #Setting up changing results 
+        invested = update_investments(investment_vals_copy["invested"], investment_vals_copy["yearly contributions"], investment_vals_copy["growth rate"])
+        hecs_repayments = HECS(person_copy["salary"])
+        hecs_bal = max(0, debts_copy["hecs balance"] - hecs_repayments)
+        mortgage = max(0, debts_copy["mortgage"] - debts_copy["mortgage repayment"])
+        savings += (person_copy["salary"]
+                    - person_copy["expenses"]
+                    - investment_vals_copy["yearly contributions"]
+                    - hecs_repayments
+                    - debts_copy["mortgage repayment"]
+                    )
+        
+        #Updating input dictionaries with newly calculated values
+        investment_vals_copy["invested"] = invested  #Update investment amount
+        investment_vals_copy["yearly contributions"] *= salary_growth  #Aggregate yearly contributions while updating with salary growth
+        debts_copy["hecs balance"] = hecs_bal    #Update hecs balance
+        debts_copy["mortgage"] = mortgage    #Update mortgage balance
+        
 
         #Updating salary and net worth
-        person["salary"] = person["salary"] * (1 + 0.02)        #Adjusting salary based on cost of living adjustment only
-        net_worth_val = net_worth(savings, invested, investment_vals["property_value"], hecs_bal, mortgage)
+        person_copy["salary"] *= salary_growth       #Adjusting salary based on cost of living adjustment only
+        net_worth_val = net_worth(savings, invested, investment_vals["property"], hecs_bal, mortgage)
 
+        #Storing results into dictionary
         results["age"].append(age)
         results["year"].append(year)
         results["invested_amount"].append(invested)
         results["hecs_remaining"].append(hecs_bal)
-        results["salary"].append(person["salary"])
+        results["salary"].append(person_copy["salary"])
         results["mortgage_remaining"].append(mortgage)
         results["net_worth"].append(net_worth_val)
 
